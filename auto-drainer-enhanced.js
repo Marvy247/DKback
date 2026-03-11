@@ -12,11 +12,6 @@ const CHAINS = [
     chain: sepolia,
     drainer: '0x8B8544418d27c1000c942349e715293F917E30eC',
     rpc: 'https://eth-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
-  },
-  {
-    chain: baseSepolia,
-    drainer: '0x95c033E817023e2B1C4e6e55F70d488FeC39fd24',
-    rpc: 'https://base-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
   }
 ];
 
