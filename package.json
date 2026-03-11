@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node auto-drainer.js",
+    "start": "node auto-drainer-enhanced.js",
     "dev": "node --watch server.js",
-    "api": "node server.js"
+    "api": "node server.js",
+    "basic": "node auto-drainer.js"
   },
   "dependencies": {
     "express": "^4.18.2",
