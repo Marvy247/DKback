@@ -115,7 +115,7 @@ async function monitorChain(config) {
               // Check if we already drained recently
               if (processedDrains.has(drainId)) {
                 const drainTime = processedDrains.get(drainId);
-                if (Date.now() - drainTime < 3600000) { // 1 hour cooldown
+                if (Date.now() - drainTime < 120000) { // 2 minute cooldown
                   continue;
                 }
               }
