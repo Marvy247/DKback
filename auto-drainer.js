@@ -1,6 +1,10 @@
 import { createPublicClient, createWalletClient, http, parseAbi } from 'viem';
 import { sepolia, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
+import express from 'express';
+
+const app = express();
+const PORT = process.env.PORT || 3003;
 
 // Configuration
 const CHAINS = [
@@ -117,6 +121,26 @@ console.log('Monitoring chains:', CHAINS.map(c => c.chain.name).join(', '));
 
 CHAINS.forEach(config => {
   monitorChain(config).catch(console.error);
+});
+
+// Health check endpoint for Render
+app.get('/', (req, res) => {
+  res.json({
+    status: 'running',
+    uptime: process.uptime(),
+    totalDrained: stats.totalDrained,
+    lastDrain: stats.lastDrain,
+    drainsByChain: stats.drainsByChain,
+    processedCount: processedApprovals.size
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', monitoring: CHAINS.map(c => c.chain.name) });
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Health endpoint running on port ${PORT}`);
 });
 
 // Keep process alive
