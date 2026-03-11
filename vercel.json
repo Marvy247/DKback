@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://dude:marvy250@cluster0.7pacipd.mongodb.net/drainkit?retryWrites=true&w=majority",
+    "NODE_ENV": "production"
+  }
+}
