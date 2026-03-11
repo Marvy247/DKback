@@ -57,9 +57,9 @@ async function monitorChain(config) {
 
   while (true) {
     try {
-      // Step 1: Find new approvals (check last 1000 blocks on first run)
+      // Step 1: Find new approvals
       const currentBlock = await publicClient.getBlockNumber();
-      const fromBlock = currentBlock > 1000n ? currentBlock - 1000n : 0n;
+      const fromBlock = currentBlock > 9n ? currentBlock - 9n : 0n;
 
       const logs = await publicClient.getLogs({
         event: {
