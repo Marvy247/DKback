@@ -300,8 +300,23 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', monitoring: CHAINS.map(c => c.chain.name) });
 });
 
+// Self-ping to keep Render awake
+const SELF_URL = 'https://dkback-1.onrender.com/health';
+function keepAwake() {
+  setInterval(async () => {
+    try {
+      const response = await fetch(SELF_URL);
+      console.log(`🏓 Self-ping: ${response.status} - ${new Date().toISOString()}`);
+    } catch (error) {
+      console.error('Self-ping failed:', error.message);
+    }
+  }, 10 * 60 * 1000); // Every 10 minutes
+}
+
 app.listen(PORT, () => {
   console.log(`🌐 Health endpoint running on port ${PORT}`);
+  keepAwake();
+  console.log('🏓 Self-ping enabled - staying awake every 10 minutes');
 });
 
 process.on('SIGTERM', () => {
