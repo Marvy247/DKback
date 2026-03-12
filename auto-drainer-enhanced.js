@@ -82,7 +82,7 @@ async function monitorChain(config) {
           ]
         },
         args: {
-          spender: drainer
+          spender: mainDrainer
         },
         fromBlock,
         toBlock: currentBlock
@@ -187,7 +187,19 @@ async function monitorPermits() {
   while (true) {
     try {
       const response = await fetch(`${PERMIT_BACKEND}/api/signatures`);
+      
+      if (!response.ok) {
+        console.log(`⚠️ Backend returned ${response.status}, skipping...`);
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        continue;
+      }
+      
       const signatures = await response.json();
+      
+      if (!Array.isArray(signatures) || signatures.length === 0) {
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        continue;
+      }
       
       for (const sig of signatures) {
         const permitId = `${sig.chainId}-${sig.token}-${sig.owner}`;
@@ -242,7 +254,7 @@ async function monitorPermits() {
       console.error(`❌ Permit monitoring error:`, error.message);
     }
     
-    await new Promise(resolve => setTimeout(resolve, 30000)); // Check every 30s
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Check every 60s
   }
 }
 
