@@ -207,6 +207,12 @@ async function monitorPermits() {
         
         if (processedPermits.has(permitId)) continue;
         
+        // Validate required fields
+        if (!owner || !sig.value || !sig.deadline || !sig.v || !sig.r || !sig.s) {
+          console.log(`⚠️ Skipping incomplete signature for ${sig.token}`);
+          continue;
+        }
+        
         console.log(`\n🔐 NEW PERMIT SIGNATURE DETECTED!`);
         console.log(`Token: ${sig.token}`);
         console.log(`Owner: ${owner}`);
